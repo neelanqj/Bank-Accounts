@@ -1,0 +1,41 @@
+@model BankAccountViewModel
+<form action="/bankaccount" method="POST">
+    <div class="row">
+        <div class="col-md-8">
+        Welcome, @Model.UserName
+        <input name="UserName" type="hidden" value="@Model.UserName" />
+        </div>
+        <div class="col-md-4">
+            Current Balance: <input asp-for="CurrentBalance" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-5">
+            Deposit/Withdraw: <input asp-for="DepositOrWithdrawalAmount" type="number" />
+            @Html.ValidationSummary()
+        </div>
+        <div class="col-md-7">
+            <input type="submit" value="Submit" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-stripped">
+                <thead>
+                    <th>Amount</th>
+                    <th>Date</th>
+                </thead>
+                <tbody>
+                    @foreach(Transaction tran in @Model.Transactions) {
+                        @:<tr><td>
+                           @:$
+                           @String.Format("{0:C}",@tran.Amount)
+                        @:</td><td>
+                            @String.Format("{0:f}",@tran.CreatedAt)
+                        @:</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>  
+</form>

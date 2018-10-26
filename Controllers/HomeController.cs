@@ -9,6 +9,7 @@ using Bank_Accounts.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bank_Accounts.Controllers
 {
@@ -24,7 +25,6 @@ namespace Bank_Accounts.Controllers
         {
             return View();
         }
-
         
         [HttpPost]
         public IActionResult Index(User user)
@@ -91,11 +91,62 @@ namespace Bank_Accounts.Controllers
                     return View();
                 }
                 
-                HttpContext.Session.SetString("User", JsonConvert.SerializeObject(userInDb));
-                return Redirect("/success");
+                // I usually wouldn't store an entire user's information in a session variable.
+                HttpContext.Session.SetInt32("User", userInDb.UserId);
+                return Redirect("/bankaccount");
             }
 
             return View();
+        }
+
+        // I changed the url route from the wireframe so that the account number doesnt get displayed.
+        // I deviated from the requirements.
+        [HttpGet]
+        [Route("/bankaccount")]
+        public IActionResult BankAccount(){
+            int? userid = HttpContext.Session.GetInt32("User");
+
+            if(HttpContext.Session.GetInt32("User") != null) {
+                ViewData["Message"] = "Your success page.";
+                BankAccountViewModel vm = new BankAccountViewModel();
+                User user = _dbContext.Users.Include(u => u.Transactions).Where(u => u.UserId == userid).FirstOrDefault();
+                vm.UserName = user.FirstName + " " + user.LastName;
+                vm.CurrentBalance = user.Transactions.Sum(t => t.Amount);
+                vm.DepositOrWithdrawalAmount = null;
+                vm.Transactions = user.Transactions;
+
+                return View(vm);
+            } else {
+                return Redirect("/");
+            }
+        }
+
+        [HttpPost]
+        [Route("/bankaccount")]
+        public IActionResult BankAccount(BankAccountViewModel model){
+            int? userid = HttpContext.Session.GetInt32("User");
+
+            if(HttpContext.Session.GetInt32("User") != null ) {
+                ViewData["Message"] = "Your success page.";
+                BankAccountViewModel vm = model;
+                User user = _dbContext.Users.Include(u => u.Transactions).Where(u => u.UserId == userid).FirstOrDefault();        
+                vm.Transactions = user.Transactions;
+                
+                if(vm.CurrentBalance + vm.DepositOrWithdrawalAmount < 0) {          
+                    ModelState.AddModelError("DepositOrWithdrawalAmount", "You cant withdraw more than you have!");
+                } else {
+                    Transaction transaction = new Transaction();
+                    transaction.Amount = (int)model.DepositOrWithdrawalAmount; 
+                    transaction.User = user;
+                    vm.CurrentBalance = user.Transactions.Sum(t => t.Amount);
+                    
+                    _dbContext.Add(transaction);
+                    _dbContext.SaveChanges();
+                }
+                return View(vm);
+            } else {
+                return Redirect("/");
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

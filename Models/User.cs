@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,5 +34,7 @@ namespace Bank_Accounts.Models
         [Compare("Password")]
         [DataType(DataType.Password)]
         public string Confirm {get;set;}
+
+        public virtual IEnumerable<Transaction> Transactions { get; set; }
     }
 }
