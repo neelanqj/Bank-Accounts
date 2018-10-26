@@ -31,7 +31,7 @@
                            @:$
                            @String.Format("{0:C}",@tran.Amount)
                         @:</td><td>
-                            @String.Format("{0:f}",@tran.CreatedAt)
+                            @tran.CreatedAt.ToString("MMM dd yyyy")
                         @:</td></tr>
                     }
                 </tbody>
